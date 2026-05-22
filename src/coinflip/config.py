@@ -19,6 +19,7 @@ class Config:
     house_private_key: str
     poll_interval: int
     min_bet_lamports: int
+    win_probability: float
 
 
 _config: Config | None = None
@@ -46,10 +47,15 @@ def _load() -> Config:
             "Run `uv run coinflip-new-wallet` to generate a wallet."
         )
 
+    win_probability = float(os.getenv("WIN_PROBABILITY", "0.49"))
+    if not 0.0 < win_probability < 1.0:
+        raise SystemExit("WIN_PROBABILITY must be between 0 and 1 (exclusive).")
+
     return Config(
         network=network,
         rpc_url=rpc_url,
         house_private_key=key,
         poll_interval=int(os.getenv("POLL_INTERVAL_SECONDS", "5")),
         min_bet_lamports=int(os.getenv("MIN_BET_LAMPORTS", "1000000")),
+        win_probability=win_probability,
     )

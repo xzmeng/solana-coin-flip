@@ -129,6 +129,7 @@ async def run_monitor(
     server_seed: str,
     min_bet: int,
     poll: int,
+    win_probability: float,
 ) -> None:
     house_addr = str(house_kp.pubkey())
     seen: set[str] = set()
@@ -161,7 +162,7 @@ async def run_monitor(
                     )
                     continue
 
-                won = flip(server_seed, sig)
+                won = flip(server_seed, sig, win_probability)
                 result_hex = hashlib.sha256(f"{server_seed}:{sig}".encode()).hexdigest()
 
                 if won:
@@ -210,10 +211,11 @@ def main() -> None:
     console.print(Panel.fit(
         f"[bold]Network:[/]          [cyan]{cfg.network}[/]\n"
         f"[bold]House address:[/]    [cyan]{house_addr}[/]\n"
+        f"[bold]Win probability:[/]  [cyan]{cfg.win_probability*100:.2f}%[/]\n"
         f"[bold]Min bet:[/]          [cyan]{cfg.min_bet_lamports / 1e9:.4f} SOL[/]\n"
         f"[bold]Poll interval:[/]    [cyan]{cfg.poll_interval}s[/]\n\n"
         f"[bold yellow]Server seed hash:[/]  [yellow]{seed_hash}[/]\n"
-        f"[dim]Share this hash with players before they bet.\n"
+        f"[dim]Share address, win probability, and seed hash with players before they bet.\n"
         f"The seed is revealed on exit so anyone can verify results.[/]",
         title="[bold green]Solana Coin Flip[/]",
     ))
@@ -229,7 +231,7 @@ def main() -> None:
     except (AttributeError, OSError):
         pass
 
-    asyncio.run(run_monitor(rpc, house_kp, server_seed, cfg.min_bet_lamports, cfg.poll_interval))
+    asyncio.run(run_monitor(rpc, house_kp, server_seed, cfg.min_bet_lamports, cfg.poll_interval, cfg.win_probability))
 
 
 if __name__ == "__main__":
