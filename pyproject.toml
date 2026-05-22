@@ -9,12 +9,15 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "base58>=2.1.1",
     "rich>=13.0.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.29.0",
 ]
 
 [project.scripts]
 coinflip = "coinflip.monitor:main"
 coinflip-new-wallet = "coinflip.wallet:generate_and_print"
 coinflip-verify = "coinflip.game:verify_cli"
+coinflip-web = "coinflip.web:main"
 
 [build-system]
 requires = ["hatchling"]
