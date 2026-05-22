@@ -62,7 +62,10 @@ class SolanaRPC:
         return result["value"]["blockhash"]  # type: ignore[index]
 
     async def send_transaction(self, tx_b64: str) -> str:
-        return await self._call("sendTransaction", tx_b64, {"encoding": "base64"})  # type: ignore[return-value]
+        return await self._call("sendTransaction", tx_b64, {
+            "encoding": "base64",
+            "preflightCommitment": "confirmed",
+        })  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------
@@ -102,21 +105,28 @@ def parse_incoming_sol(tx: dict | None, house_address: str) -> tuple[str, int] |
 # ---------------------------------------------------------------------------
 
 async def send_payout(rpc: SolanaRPC, house_kp: Keypair, winner: str, lamports: int) -> str:
-    blockhash = await rpc.get_latest_blockhash()
     ix = transfer(TransferParams(
         from_pubkey=house_kp.pubkey(),
         to_pubkey=Pubkey.from_string(winner),
         lamports=lamports,
     ))
-    msg = MessageV0.try_compile(
-        payer=house_kp.pubkey(),
-        instructions=[ix],
-        address_lookup_table_accounts=[],
-        recent_blockhash=Hash.from_string(blockhash),
-    )
-    tx = VersionedTransaction(msg, [house_kp])
-    tx_b64 = base64.b64encode(bytes(tx)).decode()
-    return await rpc.send_transaction(tx_b64)
+    for attempt in range(3):
+        blockhash = await rpc.get_latest_blockhash()
+        msg = MessageV0.try_compile(
+            payer=house_kp.pubkey(),
+            instructions=[ix],
+            address_lookup_table_accounts=[],
+            recent_blockhash=Hash.from_string(blockhash),
+        )
+        tx = VersionedTransaction(msg, [house_kp])
+        tx_b64 = base64.b64encode(bytes(tx)).decode()
+        try:
+            return await rpc.send_transaction(tx_b64)
+        except RuntimeError as e:
+            if "BlockhashNotFound" in str(e) and attempt < 2:
+                await asyncio.sleep(2)
+                continue
+            raise
 
 
 # ---------------------------------------------------------------------------
