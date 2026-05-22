@@ -114,7 +114,7 @@ async def send_payout(rpc: SolanaRPC, house_kp: Keypair, winner: str, lamports: 
         address_lookup_table_accounts=[],
         recent_blockhash=Hash.from_string(blockhash),
     )
-    tx = VersionedTransaction([house_kp], msg)
+    tx = VersionedTransaction(msg, [house_kp])
     tx_b64 = base64.b64encode(bytes(tx)).decode()
     return await rpc.send_transaction(tx_b64)
 
