@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solana Coin Flip</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f1117;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .card {
+      background: #1a1d2e;
+      border: 1px solid #2d3158;
+      border-radius: 16px;
+      padding: 40px 48px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .coin {
+      font-size: 56px;
+      margin-bottom: 12px;
+      animation: spin 6s linear infinite;
+    }
+    @keyframes spin {
+      0%   { transform: rotateY(0deg); }
+      50%  { transform: rotateY(180deg); }
+      100% { transform: rotateY(360deg); }
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .stat {
+      background: #0f1117;
+      border: 1px solid #2d3158;
+      border-radius: 10px;
+      padding: 12px 20px;
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #a78bfa;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .address-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0f1117;
+      border: 1px solid #2d3158;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+    }
+
+    .address-text {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      word-break: break-all;
+      text-align: left;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover  { background: #6d28d9; }
+    .copy-btn:active { transform: scale(0.96); }
+    .copy-btn.copied { background: #16a34a; }
+
+    .instruction {
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .instruction strong { color: #a78bfa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="coin">🪙</div>
+    <h1>Solana Coin Flip</h1>
+    <p class="subtitle">Provably fair · On-chain randomness</p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Win Chance</div>
+        <div class="stat-value" id="win-pct">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Min Bet</div>
+        <div class="stat-value" id="min-bet">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Payout</div>
+        <div class="stat-value">2×</div>
+      </div>
+    </div>
+
+    <div class="section-label">Send SOL to this address to play</div>
+    <div class="address-box">
+      <span class="address-text" id="address">Loading…</span>
+      <button class="copy-btn" id="copy-btn" onclick="copyAddress()">Copy</button>
+    </div>
+
+    <p class="instruction">
+      Send any amount ≥ <strong id="min-bet-inline">…</strong> SOL to the address above.<br>
+      Win and receive <strong>2× your bet</strong> back automatically.
+    </p>
+  </div>
+
+  <script>
+    async function load() {
+      const res = await fetch('/api/info');
+      const d = await res.json();
+      document.getElementById('address').textContent = d.house_address;
+      document.getElementById('win-pct').textContent = d.win_pct + '%';
+      document.getElementById('min-bet').textContent = d.min_bet_sol + ' SOL';
+      document.getElementById('min-bet-inline').textContent = d.min_bet_sol;
+    }
+
+    function copyAddress() {
+      const addr = document.getElementById('address').textContent;
+      navigator.clipboard.writeText(addr).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    load();
+  </script>
+</body>
+</html>
